@@ -19,6 +19,8 @@ use shadowsocks::{
         Reply,
         TcpRequestHeader,
         TcpResponseHeader,
+        UsernamePasswordAuthRequest,
+        UsernamePasswordAuthResponse,
     },
     ServerAddr,
 };
@@ -29,6 +31,7 @@ use crate::{
         context::ServiceContext,
         loadbalancing::PingBalancer,
         net::AutoProxyClientStream,
+        socks::{SS_SOCKS_PASSWORD, SS_SOCKS_USERNAME},
         utils::establish_tcp_tunnel,
     },
     net::utils::ignore_until_end,
@@ -73,21 +76,53 @@ impl Socks5TcpHandler {
 
         trace!("socks5 {:?}", handshake_req);
 
-        if !handshake_req.methods.contains(&socks5::SOCKS5_AUTH_METHOD_NONE) {
-            use std::io::Error;
-
-            let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_NOT_ACCEPTABLE);
-            resp.write_to(&mut stream).await?;
-
-            return Err(Error::new(
-                ErrorKind::Other,
-                "currently shadowsocks-rust does not support authentication",
-            ));
-        } else {
-            // Reply to client
+        // 1.5. Authentication
+        if handshake_req.methods.contains(&socks5::SOCKS5_AUTH_METHOD_NONE)
+            && SS_SOCKS_USERNAME.is_empty()
+            && SS_SOCKS_PASSWORD.is_empty()
+        {
             let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_NONE);
             trace!("reply handshake {:?}", resp);
             resp.write_to(&mut stream).await?;
+        } else if !SS_SOCKS_USERNAME.is_empty() || SS_SOCKS_PASSWORD.is_empty() {
+            if !handshake_req.methods.contains(&socks5::SOCKS5_AUTH_METHOD_PASSWORD) {
+                let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_NOT_ACCEPTABLE);
+                trace!("reply handshake {:?}", resp);
+                resp.write_to(&mut stream).await?;
+
+                return Err(std::io::Error::new(
+                    ErrorKind::Other,
+                    "username/password are configured, but client doesn't support username/password authentication",
+                ));
+            }
+            let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_PASSWORD);
+            trace!("reply handshake {:?}", resp);
+            resp.write_to(&mut stream).await?;
+
+            // Receive authentication data
+            let auth_req = match UsernamePasswordAuthRequest::read_from(&mut stream).await {
+                Ok(r) => r,
+                Err(Socks5Error::IoError(ref err)) if err.kind() == ErrorKind::UnexpectedEof => {
+                    trace!("socks5 authentication early eof. peer: {}", peer_addr);
+                    return Ok(());
+                }
+                Err(err) => {
+                    error!("socks5 authentication error: {}", err);
+                    return Err(err.into());
+                }
+            };
+
+            trace!("socks5 {:?}", auth_req);
+
+            let auth_succeeded = &auth_req.username == &*SS_SOCKS_USERNAME && &auth_req.password == &*SS_SOCKS_PASSWORD;
+            // Reply to client
+            let resp = UsernamePasswordAuthResponse::new(auth_succeeded);
+            trace!("reply authentication {:?}", resp);
+            resp.write_to(&mut stream).await?;
+
+            if !auth_succeeded {
+                return Err(std::io::Error::new(ErrorKind::Other, "client authenticates failed"));
+            }
         }
 
         // 2. Fetch headers

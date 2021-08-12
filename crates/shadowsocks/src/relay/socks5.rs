@@ -24,30 +24,32 @@ pub use self::consts::{
 
 #[rustfmt::skip]
 mod consts {
-    pub const SOCKS5_VERSION:                          u8 = 0x05;
+    pub const SOCKS5_VERSION:                                   u8 = 0x05;
 
-    pub const SOCKS5_AUTH_METHOD_NONE:                 u8 = 0x00;
-    pub const SOCKS5_AUTH_METHOD_GSSAPI:               u8 = 0x01;
-    pub const SOCKS5_AUTH_METHOD_PASSWORD:             u8 = 0x02;
-    pub const SOCKS5_AUTH_METHOD_NOT_ACCEPTABLE:       u8 = 0xff;
+    pub const SOCKS5_AUTH_METHOD_NONE:                          u8 = 0x00;
+    pub const SOCKS5_AUTH_METHOD_GSSAPI:                        u8 = 0x01;
+    pub const SOCKS5_AUTH_METHOD_PASSWORD:                      u8 = 0x02;
+    pub const SOCKS5_AUTH_METHOD_NOT_ACCEPTABLE:                u8 = 0xff;
 
-    pub const SOCKS5_CMD_TCP_CONNECT:                  u8 = 0x01;
-    pub const SOCKS5_CMD_TCP_BIND:                     u8 = 0x02;
-    pub const SOCKS5_CMD_UDP_ASSOCIATE:                u8 = 0x03;
+    pub const SOCKS5_CMD_TCP_CONNECT:                           u8 = 0x01;
+    pub const SOCKS5_CMD_TCP_BIND:                              u8 = 0x02;
+    pub const SOCKS5_CMD_UDP_ASSOCIATE:                         u8 = 0x03;
 
-    pub const SOCKS5_ADDR_TYPE_IPV4:                   u8 = 0x01;
-    pub const SOCKS5_ADDR_TYPE_DOMAIN_NAME:            u8 = 0x03;
-    pub const SOCKS5_ADDR_TYPE_IPV6:                   u8 = 0x04;
+    pub const SOCKS5_ADDR_TYPE_IPV4:                            u8 = 0x01;
+    pub const SOCKS5_ADDR_TYPE_DOMAIN_NAME:                     u8 = 0x03;
+    pub const SOCKS5_ADDR_TYPE_IPV6:                            u8 = 0x04;
 
-    pub const SOCKS5_REPLY_SUCCEEDED:                  u8 = 0x00;
-    pub const SOCKS5_REPLY_GENERAL_FAILURE:            u8 = 0x01;
-    pub const SOCKS5_REPLY_CONNECTION_NOT_ALLOWED:     u8 = 0x02;
-    pub const SOCKS5_REPLY_NETWORK_UNREACHABLE:        u8 = 0x03;
-    pub const SOCKS5_REPLY_HOST_UNREACHABLE:           u8 = 0x04;
-    pub const SOCKS5_REPLY_CONNECTION_REFUSED:         u8 = 0x05;
-    pub const SOCKS5_REPLY_TTL_EXPIRED:                u8 = 0x06;
-    pub const SOCKS5_REPLY_COMMAND_NOT_SUPPORTED:      u8 = 0x07;
-    pub const SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED: u8 = 0x08;
+    pub const SOCKS5_REPLY_SUCCEEDED:                           u8 = 0x00;
+    pub const SOCKS5_REPLY_GENERAL_FAILURE:                     u8 = 0x01;
+    pub const SOCKS5_REPLY_CONNECTION_NOT_ALLOWED:              u8 = 0x02;
+    pub const SOCKS5_REPLY_NETWORK_UNREACHABLE:                 u8 = 0x03;
+    pub const SOCKS5_REPLY_HOST_UNREACHABLE:                    u8 = 0x04;
+    pub const SOCKS5_REPLY_CONNECTION_REFUSED:                  u8 = 0x05;
+    pub const SOCKS5_REPLY_TTL_EXPIRED:                         u8 = 0x06;
+    pub const SOCKS5_REPLY_COMMAND_NOT_SUPPORTED:               u8 = 0x07;
+    pub const SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED:          u8 = 0x08;
+    pub const SOCKS5_REPLY_AUTHENTICATION_METHOD_NOT_SUPPORTED: u8 = 0x09;
+    pub const SOCKS5_REPLY_AUTHENTICATION_FAILED:               u8 = 0x0A;
 }
 
 /// SOCKS5 command
@@ -96,6 +98,8 @@ pub enum Reply {
     TtlExpired,
     CommandNotSupported,
     AddressTypeNotSupported,
+    AuthenticationMethodNotSupported,
+    AuthenticationFailed,
 
     OtherReply(u8),
 }
@@ -105,16 +109,18 @@ impl Reply {
     #[rustfmt::skip]
     fn as_u8(self) -> u8 {
         match self {
-            Reply::Succeeded               => consts::SOCKS5_REPLY_SUCCEEDED,
-            Reply::GeneralFailure          => consts::SOCKS5_REPLY_GENERAL_FAILURE,
-            Reply::ConnectionNotAllowed    => consts::SOCKS5_REPLY_CONNECTION_NOT_ALLOWED,
-            Reply::NetworkUnreachable      => consts::SOCKS5_REPLY_NETWORK_UNREACHABLE,
-            Reply::HostUnreachable         => consts::SOCKS5_REPLY_HOST_UNREACHABLE,
-            Reply::ConnectionRefused       => consts::SOCKS5_REPLY_CONNECTION_REFUSED,
-            Reply::TtlExpired              => consts::SOCKS5_REPLY_TTL_EXPIRED,
-            Reply::CommandNotSupported     => consts::SOCKS5_REPLY_COMMAND_NOT_SUPPORTED,
-            Reply::AddressTypeNotSupported => consts::SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED,
-            Reply::OtherReply(c)           => c,
+            Reply::Succeeded                        => consts::SOCKS5_REPLY_SUCCEEDED,
+            Reply::GeneralFailure                   => consts::SOCKS5_REPLY_GENERAL_FAILURE,
+            Reply::ConnectionNotAllowed             => consts::SOCKS5_REPLY_CONNECTION_NOT_ALLOWED,
+            Reply::NetworkUnreachable               => consts::SOCKS5_REPLY_NETWORK_UNREACHABLE,
+            Reply::HostUnreachable                  => consts::SOCKS5_REPLY_HOST_UNREACHABLE,
+            Reply::ConnectionRefused                => consts::SOCKS5_REPLY_CONNECTION_REFUSED,
+            Reply::TtlExpired                       => consts::SOCKS5_REPLY_TTL_EXPIRED,
+            Reply::CommandNotSupported              => consts::SOCKS5_REPLY_COMMAND_NOT_SUPPORTED,
+            Reply::AddressTypeNotSupported          => consts::SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED,
+            Reply::AuthenticationMethodNotSupported => consts::SOCKS5_REPLY_AUTHENTICATION_METHOD_NOT_SUPPORTED,
+            Reply::AuthenticationFailed             => consts::SOCKS5_REPLY_AUTHENTICATION_FAILED,
+            Reply::OtherReply(c)                    => c,
         }
     }
 
@@ -122,16 +128,18 @@ impl Reply {
     #[rustfmt::skip]
     fn from_u8(code: u8) -> Reply {
         match code {
-            consts::SOCKS5_REPLY_SUCCEEDED                  => Reply::Succeeded,
-            consts::SOCKS5_REPLY_GENERAL_FAILURE            => Reply::GeneralFailure,
-            consts::SOCKS5_REPLY_CONNECTION_NOT_ALLOWED     => Reply::ConnectionNotAllowed,
-            consts::SOCKS5_REPLY_NETWORK_UNREACHABLE        => Reply::NetworkUnreachable,
-            consts::SOCKS5_REPLY_HOST_UNREACHABLE           => Reply::HostUnreachable,
-            consts::SOCKS5_REPLY_CONNECTION_REFUSED         => Reply::ConnectionRefused,
-            consts::SOCKS5_REPLY_TTL_EXPIRED                => Reply::TtlExpired,
-            consts::SOCKS5_REPLY_COMMAND_NOT_SUPPORTED      => Reply::CommandNotSupported,
-            consts::SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED => Reply::AddressTypeNotSupported,
-            _                                               => Reply::OtherReply(code),
+            consts::SOCKS5_REPLY_SUCCEEDED                           => Reply::Succeeded,
+            consts::SOCKS5_REPLY_GENERAL_FAILURE                     => Reply::GeneralFailure,
+            consts::SOCKS5_REPLY_CONNECTION_NOT_ALLOWED              => Reply::ConnectionNotAllowed,
+            consts::SOCKS5_REPLY_NETWORK_UNREACHABLE                 => Reply::NetworkUnreachable,
+            consts::SOCKS5_REPLY_HOST_UNREACHABLE                    => Reply::HostUnreachable,
+            consts::SOCKS5_REPLY_CONNECTION_REFUSED                  => Reply::ConnectionRefused,
+            consts::SOCKS5_REPLY_TTL_EXPIRED                         => Reply::TtlExpired,
+            consts::SOCKS5_REPLY_COMMAND_NOT_SUPPORTED               => Reply::CommandNotSupported,
+            consts::SOCKS5_REPLY_ADDRESS_TYPE_NOT_SUPPORTED          => Reply::AddressTypeNotSupported,
+            consts::SOCKS5_REPLY_AUTHENTICATION_METHOD_NOT_SUPPORTED => Reply::AuthenticationMethodNotSupported,
+            consts::SOCKS5_REPLY_AUTHENTICATION_FAILED               => Reply::AuthenticationFailed,
+            _                                                        => Reply::OtherReply(code),
         }
     }
 }
@@ -140,16 +148,18 @@ impl fmt::Display for Reply {
     #[rustfmt::skip]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Reply::Succeeded               => write!(f, "Succeeded"),
-            Reply::AddressTypeNotSupported => write!(f, "Address type not supported"),
-            Reply::CommandNotSupported     => write!(f, "Command not supported"),
-            Reply::ConnectionNotAllowed    => write!(f, "Connection not allowed"),
-            Reply::ConnectionRefused       => write!(f, "Connection refused"),
-            Reply::GeneralFailure          => write!(f, "General failure"),
-            Reply::HostUnreachable         => write!(f, "Host unreachable"),
-            Reply::NetworkUnreachable      => write!(f, "Network unreachable"),
-            Reply::OtherReply(u)           => write!(f, "Other reply ({})", u),
-            Reply::TtlExpired              => write!(f, "TTL expired"),
+            Reply::Succeeded                        => write!(f, "Succeeded"),
+            Reply::AddressTypeNotSupported          => write!(f, "Address type not supported"),
+            Reply::AuthenticationFailed             => write!(f, "Authentication failed"),
+            Reply::AuthenticationMethodNotSupported => write!(f, "Authentication method not supported"),
+            Reply::CommandNotSupported              => write!(f, "Command not supported"),
+            Reply::ConnectionNotAllowed             => write!(f, "Connection not allowed"),
+            Reply::ConnectionRefused                => write!(f, "Connection refused"),
+            Reply::GeneralFailure                   => write!(f, "General failure"),
+            Reply::HostUnreachable                  => write!(f, "Host unreachable"),
+            Reply::NetworkUnreachable               => write!(f, "Network unreachable"),
+            Reply::OtherReply(u)                    => write!(f, "Other reply ({})", u),
+            Reply::TtlExpired                       => write!(f, "TTL expired"),
         }
     }
 }
@@ -165,6 +175,8 @@ pub enum Error {
     AddressDomainInvalidEncoding,
     #[error("unsupported socks version {0:#x}")]
     UnsupportedSocksVersion(u8),
+    #[error("invalid authentication version {0:#x}")]
+    InvalidAuthenticationVersion(u8),
     #[error("unsupported command {0:#x}")]
     UnsupportedCommand(u8),
     #[error("{0}")]
@@ -191,6 +203,7 @@ impl Error {
             Error::AddressTypeNotSupported(..) => Reply::AddressTypeNotSupported,
             Error::AddressDomainInvalidEncoding => Reply::GeneralFailure,
             Error::UnsupportedSocksVersion(..) => Reply::GeneralFailure,
+            Error::InvalidAuthenticationVersion(..) => Reply::GeneralFailure,
             Error::UnsupportedCommand(..) => Reply::CommandNotSupported,
             Error::Reply(r) => r,
         }
@@ -724,6 +737,149 @@ impl HandshakeResponse {
     /// Write to buffer
     pub fn write_to_buf<B: BufMut>(self, buf: &mut B) {
         buf.put_slice(&[consts::SOCKS5_VERSION, self.chosen_method]);
+    }
+
+    /// Length in bytes
+    pub fn serialized_len(self) -> usize {
+        2
+    }
+}
+
+/// SOCKS5 username/password authentication request packet (RFC1929)
+///
+/// ```plain
+/// +----+------+----------+------+----------+
+/// |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+/// +----+------+----------+------+----------+
+/// | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
+/// +----+------+----------+------+----------+
+/// ```
+#[derive(Clone, Debug)]
+pub struct UsernamePasswordAuthRequest {
+    pub username: Vec<u8>,
+    pub password: Vec<u8>,
+}
+
+impl UsernamePasswordAuthRequest {
+    /// Creates a handshake response
+    pub fn new(un: Vec<u8>, pw: Vec<u8>) -> UsernamePasswordAuthRequest {
+        assert!(un.len() <= 255);
+        assert!(pw.len() <= 255);
+        UsernamePasswordAuthRequest {
+            username: un,
+            password: pw,
+        }
+    }
+
+    /// Read from a reader
+    pub async fn read_from<R>(r: &mut R) -> Result<UsernamePasswordAuthRequest, Error>
+    where
+        R: AsyncRead + Unpin,
+    {
+        let mut buf = [0u8; 1];
+
+        // Read version field
+        let _ = r.read_exact(&mut buf).await?;
+        let ver = buf[0];
+
+        // Read username length
+        let _ = r.read_exact(&mut buf).await?;
+        let mut username = vec![0; buf[0] as usize];
+        // Read username
+        let _ = r.read_exact(&mut username).await?;
+
+        // Read password length
+        let _ = r.read_exact(&mut buf).await?;
+        let mut password = vec![0; buf[0] as usize];
+        // Read password
+        let _ = r.read_exact(&mut password).await?;
+
+        if ver != 0x1 {
+            return Err(Error::InvalidAuthenticationVersion(ver));
+        } else {
+            Ok(UsernamePasswordAuthRequest { username, password })
+        }
+    }
+
+    /// Write to a writer
+    pub async fn write_to<W>(self, w: &mut W) -> io::Result<()>
+    where
+        W: AsyncWrite + Unpin,
+    {
+        let mut buf = BytesMut::with_capacity(self.serialized_len());
+        self.write_to_buf(&mut buf);
+        w.write_all(&buf).await
+    }
+
+    /// Write to buffer
+    pub fn write_to_buf<B: BufMut>(self, buf: &mut B) {
+        // Version is always 0x01
+        buf.put_u8(0x01);
+        buf.put_u8(self.username.len() as u8);
+        buf.put_slice(self.username.as_slice());
+        buf.put_u8(self.password.len() as u8);
+        buf.put_slice(self.password.as_slice());
+    }
+
+    /// Length in bytes
+    pub fn serialized_len(&self) -> usize {
+        1 + 1 + self.username.len() + 1 + self.password.len()
+    }
+}
+
+/// SOCKS5 username/password authentication response packet (RFC1929)
+///
+/// ```plain
+/// +----+--------+
+/// |VER | STATUS |
+/// +----+--------+
+/// | 1  |   1    |
+/// +----+--------+
+/// ```
+#[derive(Clone, Debug, Copy)]
+pub struct UsernamePasswordAuthResponse {
+    pub succeeded: bool,
+}
+
+impl UsernamePasswordAuthResponse {
+    /// Creates a handshake response
+    pub fn new(succeeded: bool) -> UsernamePasswordAuthResponse {
+        UsernamePasswordAuthResponse { succeeded }
+    }
+
+    /// Read from a reader
+    pub async fn read_from<R>(r: &mut R) -> Result<UsernamePasswordAuthResponse, Error>
+    where
+        R: AsyncRead + Unpin,
+    {
+        let mut buf = [0u8; 2];
+        let _ = r.read_exact(&mut buf).await?;
+
+        if buf[0] != 0x01 {
+            Err(Error::InvalidAuthenticationVersion(buf[0]))
+        } else {
+            Ok(UsernamePasswordAuthResponse {
+                succeeded: buf[1] == 0x00,
+            })
+        }
+    }
+
+    /// Write to a writer
+    pub async fn write_to<W>(self, w: &mut W) -> io::Result<()>
+    where
+        W: AsyncWrite + Unpin,
+    {
+        let mut buf = BytesMut::with_capacity(self.serialized_len());
+        self.write_to_buf(&mut buf);
+        w.write_all(&buf).await
+    }
+
+    /// Write to buffer
+    pub fn write_to_buf<B: BufMut>(self, buf: &mut B) {
+        // Version is always 0x01
+        // Status is 0x00 means authentication succeeded, otherwise it failed
+        //  Here we always use 0xFF as failed value
+        buf.put_slice(&[0x01, if self.succeeded { 0x00 } else { 0xFF }]);
     }
 
     /// Length in bytes

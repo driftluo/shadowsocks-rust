@@ -6,6 +6,7 @@ use std::{
     task::{self, Poll},
 };
 
+use crate::local::socks::{SS_SOCKS_PASSWORD, SS_SOCKS_USERNAME};
 use log::trace;
 use pin_project::pin_project;
 use shadowsocks::relay::socks5::{
@@ -18,6 +19,8 @@ use shadowsocks::relay::socks5::{
     Reply,
     TcpRequestHeader,
     TcpResponseHeader,
+    UsernamePasswordAuthRequest,
+    UsernamePasswordAuthResponse,
 };
 use tokio::{
     io::{AsyncRead, AsyncWrite, ReadBuf},
@@ -38,10 +41,16 @@ impl Socks5TcpClient {
         A: Into<Address>,
         P: ToSocketAddrs,
     {
+        let enable_auth = !SS_SOCKS_USERNAME.is_empty() && !SS_SOCKS_PASSWORD.is_empty();
+
         let mut s = TcpStream::connect(proxy).await?;
 
         // 1. Handshake
-        let hs = HandshakeRequest::new(vec![socks5::SOCKS5_AUTH_METHOD_NONE]);
+        let hs = HandshakeRequest::new(vec![if enable_auth {
+            socks5::SOCKS5_AUTH_METHOD_PASSWORD
+        } else {
+            socks5::SOCKS5_AUTH_METHOD_NONE
+        }]);
         trace!("client connected, going to send handshake: {:?}", hs);
 
         hs.write_to(&mut s).await?;
@@ -49,7 +58,26 @@ impl Socks5TcpClient {
         let hsp = HandshakeResponse::read_from(&mut s).await?;
 
         trace!("got handshake response: {:?}", hsp);
-        assert_eq!(hsp.chosen_method, socks5::SOCKS5_AUTH_METHOD_NONE);
+
+        if enable_auth {
+            if hsp.chosen_method == socks5::SOCKS5_AUTH_METHOD_PASSWORD {
+                // 1.5. Authentication
+                let auth_req = UsernamePasswordAuthRequest::new(SS_SOCKS_USERNAME.clone(), SS_SOCKS_PASSWORD.clone());
+                trace!("sending authentication request: {:?}", auth_req);
+                auth_req.write_to(&mut s).await?;
+                let auth_resp = UsernamePasswordAuthResponse::read_from(&mut s).await?;
+                trace!("got authentication response: {:?}", auth_resp);
+                if !auth_resp.succeeded {
+                    return Err(Error::Reply(Reply::AuthenticationFailed));
+                }
+            } else if hsp.chosen_method != socks5::SOCKS5_AUTH_METHOD_NONE {
+                return Err(Error::Reply(Reply::AuthenticationMethodNotSupported));
+            }
+        } else {
+            if hsp.chosen_method != socks5::SOCKS5_AUTH_METHOD_NONE {
+                return Err(Error::Reply(Reply::AuthenticationFailed));
+            }
+        }
 
         // 2. Send request header
         let h = TcpRequestHeader::new(Command::TcpConnect, addr.into());
