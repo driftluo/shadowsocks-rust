@@ -123,7 +123,7 @@ replay-attack-detect = ["shadowsocks-service/replay-attack-detect"]
 log = "0.4"
 log4rs = { version = "1.0", optional = true }
 
-clap = { version = "2", features = ["wrap_help", "suggestions"] }
+clap = { version = "3", features = ["wrap_help", "suggestions"] }
 cfg-if = "1"
 qrcode = { version = "0.12", default-features = false }
 exitcode = "1"
