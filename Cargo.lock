@@ -2036,9 +2036,9 @@ dependencies = [
 
 [[package]]
 name = "shadowsocks-crypto"
-version = "0.3.0"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f9a6bec0435b22858734a1be996cc4d8913aa8a48ddcd8faacc781afce79b25"
+checksum = "f5fa7f78b7e5570cb5fbb0e7b1466fda8bbcb9fef8b09ee816f89dd10ba3dd1d"
 dependencies = [
  "aes",
  "aes-gcm",
