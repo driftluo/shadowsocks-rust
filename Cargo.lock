@@ -1713,9 +1713,9 @@ dependencies = [
 
 [[package]]
 name = "ring-compat"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80f9cf4a178de62d388e6502dae2101b37c1becf65227bf1210e6cf12dc633a3"
+checksum = "6242f589b69a0555addb0bb759f81e5cba40485d38b36f780ab3a588b2bdf064"
 dependencies = [
  "aead",
  "digest 0.9.0",
@@ -1726,7 +1726,6 @@ dependencies = [
  "p256",
  "p384",
  "ring",
- "zeroize",
 ]
 
 [[package]]
@@ -2036,9 +2035,9 @@ dependencies = [
 
 [[package]]
 name = "shadowsocks-crypto"
-version = "0.3.0"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f9a6bec0435b22858734a1be996cc4d8913aa8a48ddcd8faacc781afce79b25"
+checksum = "dd381517e3eb8fec5090696debfdea972d8afe6fc926c26c7bfd5fee9053efbd"
 dependencies = [
  "aes",
  "aes-gcm",
