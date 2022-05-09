@@ -2069,7 +2069,7 @@ dependencies = [
 [[package]]
 name = "shadowsocks-crypto"
 version = "0.4.0"
-source = "git+https://github.com/shadowsocks/shadowsocks-crypto.git#b06dc2bf69ca8d1139e55b7fee8cf16b581fd422"
+source = "git+https://github.com/shadowsocks/shadowsocks-crypto.git#22e74eaf67988c16ce22ab118e5f3881fbfaffb5"
 dependencies = [
  "aes 0.7.5",
  "aes-gcm",
